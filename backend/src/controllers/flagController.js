@@ -1,4 +1,5 @@
 const { FeatureFlag } = require('../models');
+const { invalidateFlag } = require('../services/cacheService');
 
 const createFlag = async (req, res, next) => {
   try {
@@ -16,6 +17,7 @@ const createFlag = async (req, res, next) => {
       key, name, description, enabled, rollout_percentage, targeting_rules
     });
 
+    await invalidateFlag(key);
     res.status(201).json({ success: true, data: flag });
   } catch (error) {
     next(error);
@@ -76,6 +78,7 @@ const updateFlag = async (req, res, next) => {
       });
     }
 
+    await invalidateFlag(key);
     res.json({ success: true, data: flag });
   } catch (error) {
     next(error);
@@ -94,6 +97,7 @@ const deleteFlag = async (req, res, next) => {
       });
     }
 
+    await invalidateFlag(key);
     res.json({ success: true, message: `Flag '${key}' deleted successfully` });
   } catch (error) {
     next(error);
@@ -112,6 +116,7 @@ const toggleFlag = async (req, res, next) => {
       });
     }
 
+    await invalidateFlag(key);
     res.json({
       success: true,
       data: flag,

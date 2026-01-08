@@ -38,6 +38,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/flags', require('./routes/flags'));
+app.use('/api/evaluate', require('./routes/evaluate'));
 
 app.use(notFoundHandler);
 app.use(errorHandler);
