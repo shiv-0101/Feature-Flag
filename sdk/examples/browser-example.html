@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Flags - Browser Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .dark-theme {
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .light-theme {
+      background: #fff;
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    .dark-theme pre {
+      background: #2a2a2a;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <h1>Feature Flags Browser Demo</h1>
+  
+  <div>
+    <button onclick="checkDarkMode()">Check Dark Mode</button>
+    <button onclick="checkNewFeature()">Check New Feature</button>
+    <button onclick="loadAllFlags()">Load All Flags</button>
+    <button onclick="togglePolling()">Toggle Polling</button>
+    <button onclick="clearCache()">Clear Cache</button>
+  </div>
+
+  <div id="output"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../dist/index.umd.js"></script>
+  <script>
+    const client = new FeatureFlags.FeatureFlagClient({
+      apiUrl: 'http://localhost:3001/api',
+      userId: 'browser_user_' + Math.random().toString(36).substr(2, 9),
+      userAttributes: {
+        browser: navigator.userAgent,
+        platform: navigator.platform,
+      },
+      pollInterval: 30000,
+      enableCache: true,
+    });
+
+    const output = document.getElementById('output');
+    let isPollingActive = false;
+
+    client.on('ready', (flags) => {
+      log('SDK Ready! Initial flags:', flags);
+      applyTheme();
+    });
+
+    client.on('flagsUpdated', (flags) => {
+      log('Flags updated:', flags);
+      applyTheme();
+    });
+
+    client.on('error', (error) => {
+      log('Error:', error.message, 'error');
+    });
+
+    client.initialize().catch(err => {
+      log('Initialization failed:', err.message, 'error');
+    });
+
+    async function checkDarkMode() {
+      const enabled = await client.isEnabled('dark_mode', false);
+      log('Dark mode:', enabled);
+      applyTheme();
+    }
+
+    async function checkNewFeature() {
+      const enabled = await client.isEnabled('new_feature', false);
+      log('New feature:', enabled);
+    }
+
+    async function loadAllFlags() {
+      await client.fetchAllFlags();
+      const flags = client.getAllFlags();
+      log('All flags:', flags);
+    }
+
+    function togglePolling() {
+      if (isPollingActive) {
+        client.stopPolling();
+        log('Polling stopped');
+      } else {
+        client.startPolling();
+        log('Polling started');
+      }
+      isPollingActive = !isPollingActive;
+    }
+
+    function clearCache() {
+      client.clearCache();
+      log('Cache cleared');
+    }
+
+    async function applyTheme() {
+      const darkMode = await client.isEnabled('dark_mode', false);
+      document.body.className = darkMode ? 'dark-theme' : 'light-theme';
+    }
+
+    function log(message, data, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `
+        <strong>[${timestamp}]</strong> ${message}
+        ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+      `;
+      entry.style.marginTop = '10px';
+      entry.style.padding = '10px';
+      entry.style.borderLeft = `3px solid ${type === 'error' ? '#f56565' : '#48bb78'}`;
+      output.insertBefore(entry, output.firstChild);
+    }
+  </script>
+</body>
+</html>
