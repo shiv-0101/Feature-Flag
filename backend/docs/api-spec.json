@@ -1,0 +1,349 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Feature Flag System API",
+    "description": "REST API for managing and evaluating feature flags",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/flags": {
+      "get": {
+        "summary": "Get all feature flags",
+        "parameters": [
+          {
+            "name": "enabled",
+            "in": "query",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of flags",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/FeatureFlag" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new feature flag",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateFlagRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Flag created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/FeatureFlag" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/flags/{key}": {
+      "get": {
+        "summary": "Get flag by key",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flag found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/FeatureFlag" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Flag not found" }
+        }
+      },
+      "put": {
+        "summary": "Update feature flag",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFlagRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Flag updated" },
+          "404": { "description": "Flag not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete feature flag",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Flag deleted" },
+          "404": { "description": "Flag not found" }
+        }
+      }
+    },
+    "/flags/{key}/toggle": {
+      "patch": {
+        "summary": "Toggle flag enabled state",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Flag toggled" },
+          "404": { "description": "Flag not found" }
+        }
+      }
+    },
+    "/evaluate": {
+      "post": {
+        "summary": "Evaluate single flag for user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EvaluateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "flagKey": { "type": "string" },
+                        "result": { "type": "boolean" },
+                        "userId": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluate/bulk": {
+      "post": {
+        "summary": "Evaluate multiple flags for user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BulkEvaluateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk evaluation results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evaluate/all": {
+      "post": {
+        "summary": "Evaluate all enabled flags for user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": {
+                  "userId": { "type": "string" },
+                  "attributes": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All flag evaluations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FeatureFlag": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "key": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "rollout_percentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "targeting_rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TargetingRule" }
+          },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TargetingRule": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["user_id", "user_attribute"] },
+          "operator": { "type": "string" },
+          "key": { "type": "string" },
+          "value": {},
+          "values": { "type": "array" }
+        }
+      },
+      "CreateFlagRequest": {
+        "type": "object",
+        "required": ["key", "name"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean", "default": false },
+          "rollout_percentage": { "type": "integer", "minimum": 0, "maximum": 100, "default": 0 },
+          "targeting_rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TargetingRule" },
+            "default": []
+          }
+        }
+      },
+      "UpdateFlagRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "rollout_percentage": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "targeting_rules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TargetingRule" }
+          }
+        }
+      },
+      "EvaluateRequest": {
+        "type": "object",
+        "required": ["flagKey", "userId"],
+        "properties": {
+          "flagKey": { "type": "string" },
+          "userId": { "type": "string" },
+          "attributes": { "type": "object" }
+        }
+      },
+      "BulkEvaluateRequest": {
+        "type": "object",
+        "required": ["flagKeys", "userId"],
+        "properties": {
+          "flagKeys": {
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 100
+          },
+          "userId": { "type": "string" },
+          "attributes": { "type": "object" }
+        }
+      }
+    }
+  }
+}
