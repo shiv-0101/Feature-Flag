@@ -2,7 +2,7 @@ const db = require('../config/database');
 
 class FlagEvaluation {
   static async create(evaluationData) {
-    const { flag_key, user_id, result } = evaluationData;
+    const { flag_key, user_id, result: evalResult } = evaluationData;
 
     const query = `
       INSERT INTO flag_evaluations (flag_key, user_id, result)
@@ -10,8 +10,8 @@ class FlagEvaluation {
       RETURNING *
     `;
 
-    const result = await db.query(query, [flag_key, user_id, result]);
-    return result.rows[0];
+    const dbResult = await db.query(query, [flag_key, user_id, evalResult]);
+    return dbResult.rows[0];
   }
 
   static async getStats(flagKey, options = {}) {
