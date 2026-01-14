@@ -60,13 +60,16 @@ class FlagEvaluation {
   }
 
   static async deleteOldLogs(daysOld = 30) {
+    // Validate input to prevent SQL injection
+    const days = Math.max(1, Math.min(365, parseInt(daysOld) || 30));
+    
     const query = `
       DELETE FROM flag_evaluations
-      WHERE evaluated_at < NOW() - INTERVAL '${daysOld} days'
+      WHERE evaluated_at < NOW() - INTERVAL '1 day' * $1
       RETURNING id
     `;
 
-    const result = await db.query(query);
+    const result = await db.query(query, [days]);
     return result.rows.length;
   }
 }
