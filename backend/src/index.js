@@ -34,7 +34,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 app.use('/api/flags', require('./routes/flags'));
