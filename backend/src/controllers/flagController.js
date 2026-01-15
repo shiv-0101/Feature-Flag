@@ -26,11 +26,14 @@ const createFlag = async (req, res, next) => {
 
 const getAllFlags = async (req, res, next) => {
   try {
-    const { enabled } = req.query;
+    const { enabled, limit } = req.query;
     
     const filters = {};
     if (enabled !== undefined) {
       filters.enabled = enabled === 'true';
+    }
+    if (limit !== undefined) {
+      filters.limit = parseInt(limit) || 100;
     }
 
     const flags = await FeatureFlag.findAll(filters);
