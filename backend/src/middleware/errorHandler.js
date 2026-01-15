@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('Error:', err.message);
 
   if (err.code === '23505') {
     return res.status(409).json({
