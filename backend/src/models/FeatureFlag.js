@@ -25,13 +25,20 @@ class FeatureFlag {
   static async findAll(filters = {}) {
     let query = 'SELECT * FROM feature_flags';
     const values = [];
+    let paramIndex = 1;
     
     if (filters.enabled !== undefined) {
-      query += ' WHERE enabled = $1';
+      query += ` WHERE enabled = $${paramIndex}`;
       values.push(filters.enabled);
+      paramIndex++;
     }
     
     query += ' ORDER BY created_at DESC';
+    
+    if (filters.limit !== undefined && filters.limit > 0) {
+      query += ` LIMIT $${paramIndex}`;
+      values.push(filters.limit);
+    }
     
     const result = await db.query(query, values);
     return result.rows;
