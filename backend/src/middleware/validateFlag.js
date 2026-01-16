@@ -76,7 +76,14 @@ const validateFlagKey = (req, res, next) => {
     });
   }
 
+  if (!/^[a-z0-9_]+$/.test(key)) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Flag key must contain only lowercase letters, numbers, and underscores'
+    });
+  }
+
   next();
 };
 
-module.exports = { validateFlag, validateFlagKey };
+module.exports = { validateFlag, validateFlagKey, sanitizeString };
